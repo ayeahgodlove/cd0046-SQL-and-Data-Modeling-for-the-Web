@@ -5,6 +5,7 @@
 import json
 import dateutil.parser
 import babel
+from traitlets import default
 from flask import Flask, render_template, request, Response, flash, redirect, url_for
 from flask_moment import Moment
 from flask_sqlalchemy import SQLAlchemy
@@ -21,9 +22,9 @@ app = Flask(__name__)
 moment = Moment(app)
 app.config.from_object('config')
 db = SQLAlchemy(app)
-migrate = Migrate(app, db) # Bootstrap our application migrations
 
 # TODO: connect to a local postgresql database
+migrate = Migrate(app, db) # Bootstrap our application migrations
 
 #----------------------------------------------------------------------------#
 # Models.
@@ -42,6 +43,13 @@ class Venue(db.Model):
     facebook_link = db.Column(db.String(120))
 
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
+    # missing
+    website_link = db.Column(db.String(120))
+    seeking_talent = db.Column(db.Boolean, nullable=False, default=False)
+    seeking_description = db.Column(db.String(120))
+    shows = db.relationship("Show", backref="venue", cascade="all, delete", lazy='joined')
+
+    # TODO: implement any missing fields, as a database migration using Flask-Migrate
 
 class Artist(db.Model):
     __tablename__ = 'Artist'
@@ -56,9 +64,24 @@ class Artist(db.Model):
     facebook_link = db.Column(db.String(120))
 
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
+    # missing
+    website_link = db.Column(db.String(120))
+    seeking_venue = db.Column(db.Boolean, nullable=False, default=False)
+    seeking_description = db.Column(db.String(500))
+    shows = db.relationship("Show",  backref="Artist", cascade="all, delete", lazy='joined')
 
 # TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
+class Show(db.Model):
+  __tablename__ = 'Show'
 
+  id = db.Column(db.Integer, primary_key=True)
+  # Foreign keys
+  artist_id = db.Column(db.Integer, db.ForeignKey('Artist.id'), nullable=False)
+  venue_id = db.Column(db.Integer, db.ForeignKey('Venue.id'), nullable=False)
+  start_time = db.Column(db.DateTime, nullable=False)
+
+  Artist = db.relationship(Artist, backref="Artist")
+  Venue = db.relationship(Venue, backref="Venue")
 #----------------------------------------------------------------------------#
 # Filters.
 #----------------------------------------------------------------------------#
